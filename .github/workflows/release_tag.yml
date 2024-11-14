@@ -1,0 +1,26 @@
+name: release_tag.yml
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build_bins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+      - name: Run fetch bins
+        working-directory: "./binaries/cmd/fetch_bins"
+        run: go run main.go
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bins_without_tmp
+          path: |
+            ./binaries/cmd/fetch_bins/out
+            ./binaries/cmd/fetch_bins/out/**/*
+            !./binaries/cmd/fetch_bins/out/**/*.tmp
+            !./binaries/cmd/fetch_bins/out/*.tmp

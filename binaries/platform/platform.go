@@ -62,9 +62,28 @@ func BinaryPlatformNameStatic() string {
 	return fmt.Sprintf("linux-static-%s", arch)
 }
 
+func BinaryPlatformNameForCustom(platform string, arch string) string {
+	// other supported platforms are darwin and windows
+	if platform != "linux" {
+		// special case for darwin arm64
+		if platform == "darwin" && arch == "arm64" {
+			return "darwin-arm64"
+		}
+		// otherwise, return `darwin` or `windows`
+		return platform
+	}
+
+	return fmt.Sprintf("linux-static-%s", arch)
+
+}
+
 // Name returns the platform name
 func Name() string {
 	return runtime.GOOS
+}
+
+func AllNames() []string {
+	return []string{"windows", "darwin", "linux"}
 }
 
 func Arch() string {
@@ -77,6 +96,9 @@ func Arch() string {
 		log.Printf("warning: unsupported architecture %s, falling back to x64", runtime.GOARCH)
 		return "x64"
 	}
+}
+func AllArches() []string {
+	return []string{"x64", "arm64"}
 }
 
 // CheckForExtension adds a .exe extension on windows (e.g. .gz -> .exe.gz)

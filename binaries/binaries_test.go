@@ -38,11 +38,23 @@ func TestFetch_localDir(t *testing.T) {
 	dir := path.Join(wd, "out")
 
 	//goland:noinspection GoUnhandledErrorResult
-	defer os.RemoveAll(dir)
+	//defer os.RemoveAll(dir)
 
 	if err := FetchNative(dir); err != nil {
 		t.Fatalf("fetchEngine failed: %s", err)
 	}
+}
+
+func TestFetchAll_localDir(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := path.Join(wd, "out")
+	if err := FetchAllNative(dir); err != nil {
+		t.Fatalf("fetchEngine failed: %s", err)
+	}
+
 }
 
 func TestFetch_withCache(t *testing.T) {

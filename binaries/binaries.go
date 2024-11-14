@@ -51,6 +51,30 @@ func PrismaCLIName() string {
 	return fmt.Sprintf("prisma-cli-%s-%s", variation, arch)
 }
 
+type prismaCliName struct {
+	Name  string
+	Arch  string
+	Fname string
+}
+
+func AllPrismaCliNames() []prismaCliName {
+	var res []prismaCliName
+	variations := platform.AllNames()
+	arches := platform.AllArches()
+	for _, variation := range variations {
+		for _, arch := range arches {
+			fname := fmt.Sprintf("prisma-cli-%s-%s", variation, arch)
+			toAdd := prismaCliName{
+				Name:  variation,
+				Arch:  arch,
+				Fname: fname,
+			}
+			res = append(res, toAdd)
+		}
+	}
+	return res
+}
+
 var baseDirName = path.Join("prisma", "binaries")
 
 // GlobalTempDir returns the path of where the engines live
@@ -141,6 +165,24 @@ func FetchNative(toDir string) error {
 	return nil
 }
 
+func FetchAllNative(toDir string) error {
+	if err := DownloadCLIAll(toDir); err != nil {
+		return fmt.Errorf("could not download engines: %w", err)
+	}
+	platforms := platform.AllNames()
+	arches := platform.AllArches()
+	for _, plat := range platforms {
+		for _, arch := range arches {
+			for _, e := range Engines {
+				if err := FetchEngine(toDir, e.Name, platform.BinaryPlatformNameForCustom(plat, arch)); err != nil {
+					return fmt.Errorf("could not download engines: %w", err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func DownloadCLI(toDir string) error {
 	cli := PrismaCLIName()
 	to := platform.CheckForExtension(platform.Name(), path.Join(toDir, cli))
@@ -161,6 +203,29 @@ func DownloadCLI(toDir string) error {
 		logger.Debug.Printf("prisma cli is cached")
 	}
 
+	return nil
+}
+
+func DownloadCLIAll(toDir string) error {
+	cli := AllPrismaCliNames()
+	for _, v := range cli {
+		to := platform.CheckForExtension(v.Name, path.Join(toDir, v.Fname))
+		url := platform.CheckForExtension(v.Name, fmt.Sprintf(PrismaURL, "prisma-cli", PrismaVersion, v.Name, v.Arch))
+		logger.Debug.Printf("ensuring CLI %s from %s to %s", cli, url, to)
+
+		if _, err := os.Stat(to); os.IsNotExist(err) {
+			filename := path.Base(to)
+			logger.Info.Printf("prisma cli binary %s doesn't exist, fetching... (this might take a few minutes)", filename)
+
+			if err := download(url, to); err != nil {
+				return fmt.Errorf("could not download %s to %s: %w", url, to, err)
+			}
+
+			logger.Info.Printf("prisma cli fetched successfully.")
+		} else {
+			logger.Debug.Printf("prisma cli is cached")
+		}
+	}
 	return nil
 }
 
