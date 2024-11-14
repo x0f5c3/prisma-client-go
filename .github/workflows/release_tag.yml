@@ -1,8 +1,6 @@
 name: release_tag.yml
 on:
   push:
-    tags:
-      - "v*"
 
 jobs:
   build_bins:
